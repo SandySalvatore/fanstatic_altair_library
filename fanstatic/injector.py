@@ -6,8 +6,11 @@ from fanstatic import ConfigurationError
 from fanstatic import compat
 from fanstatic import DEBUG, MINIFIED
 import fanstatic
+import re
 
 CONTENT_TYPES = ['text/html', 'text/xml', 'application/xhtml+xml']
+
+_head_regex = re.compile('(<head[^>]*>)')
 
 
 class Injector(object):
@@ -175,9 +178,10 @@ class TopBottomInjector(InjectorPlugin):
         # seperate inclusions in top and bottom inclusions if this is needed
         top, bottom = self.group(needed)
         if top:
-            html = html.replace(
-                compat.as_bytestring('</head>'),
-                compat.as_bytestring('%s</head>' % top.render()), 1)
+            html = _head_regex.sub('\\1\n    %s\n' % (top.render()), html.decode(), count=1)
+#             html = html.replace(
+#                 compat.as_bytestring('</head>'),
+#                 compat.as_bytestring('%s</head>' % top.render()), 1)
         if bottom:
             html = html.replace(
                 compat.as_bytestring('</body>'),
